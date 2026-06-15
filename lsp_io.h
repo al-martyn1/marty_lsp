@@ -94,14 +94,16 @@ public:
     {
         const CharReader &reader;
 
+        InputIterator(const CharReader &r) : reader(r) {}
+
         InputIterator operator++() // prefix
         {
-            return this;
+            return *this;
         }
 
         InputIterator operator++(int) // postfix
         {
-            return this;
+            return *this;
         }
 
         int operator*()
@@ -114,7 +116,7 @@ public:
 
     InputIterator inputIterator() const
     {
-        return InputIterator{*this};
+        return InputIterator(*this);
     }
 
 
@@ -144,7 +146,7 @@ struct StringViewInputIterator
 
 protected:
 
-    const StringView sv;
+    StringView       sv;
     const_iterator   it;
 
 
@@ -160,7 +162,7 @@ public:
     StringViewInputIterator operator++() // prefix
     {
         ++it;
-        return this;
+        return *this;
     }
 
     StringViewInputIterator operator++(int) // postfix

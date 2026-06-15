@@ -16,6 +16,8 @@
 #include <algorithm>
 #include <iterator>
 #include <string>
+#include <stdexcept>
+#include <vector>
 
 //--------------------------------------------------------------------------------------------------------------------
 
@@ -124,6 +126,9 @@ struct Header
                     else if (ch=='\n')
                         throw std::runtime_error("unexpected LF in input stream while reading header name");
 
+                    else if (ch==':')
+                        st = stWaitText;
+
                     else if (!utils::isSpace(ch))
                         hdr.name.append(1, ch);
 
@@ -211,6 +216,200 @@ struct Header
 }; // struct Header
 
 //----------------------------------------------------------------------------
+
+
+
+//----------------------------------------------------------------------------
+// У нас LSP-сервер - единственный клиент на STDIN, поэтому блокирующее чтение - норм
+template<typename InputIt>
+inline
+InputIt readHeaders(InputIt it, std::vector<Header> &headers)
+{
+    headers.clear();
+
+    while(true)
+    {
+        Header hdr;
+        it = Header::read(it, hdr);
+        if (hdr.empty())
+        {
+            if (headers.empty())
+                throw std::runtime_error("missing headers");
+            return it;
+        }
+
+        headers.push_back(hdr);
+    }
+}
+
+//----------------------------------------------------------------------------
+inline
+std::size_t findHeader(const std::vector<Header> &headers, std::string hdrName)
+{
+    hdrName = utils::tolower_copy(hdrName);
+
+    for(std::size_t i=0; i!=headers.size(); ++i)
+    {
+        if (utils::tolower_copy(headers[i].name)==hdrName)
+            return i;
+    }
+
+    return std::size_t(-1);
+}
+
+//----------------------------------------------------------------------------
+inline
+std::size_t getContentLength(const std::vector<Header> &headers)
+{
+    std::size_t idx = findHeader(headers, "Content-Length");
+    if (idx==std::size_t(-1))
+        throw std::runtime_error("missing mandatory header 'Content-Length'");
+
+    try
+    {
+        std::size_t res = (std::size_t)std::stoull(headers[idx].text);
+        return res;
+    }
+    catch(const std::invalid_argument &)
+    {
+        throw std::runtime_error("invalid value in 'Content-Length' header: " + headers[idx].text);
+    }
+    catch(const std::out_of_range &)
+    {
+        throw std::runtime_error("value in 'Content-Length' header is too big");
+    }
+    
+}
+
+//----------------------------------------------------------------------------
+inline
+std::string getContentType(const std::vector<Header> &headers, const std::string &defType="application/vscode-jsonrpc")
+{
+    std::size_t idx = findHeader(headers, "Content-Type");
+    if (idx==std::size_t(-1))
+        return defType;
+
+    std::vector<std::string> parts;
+    utils::split(headers[idx].text, ';', std::back_inserter(parts));
+    if (parts.empty())
+        return defType;
+
+    for(auto &p: parts)
+        p = utils::trim(p);
+
+    if (parts[0].empty())
+        return defType;
+
+    return parts[0];
+}
+
+//----------------------------------------------------------------------------
+inline
+std::string getContentTypeCharset(const std::vector<Header> &headers, const std::string &defCharset="utf-8")
+{
+    std::size_t idx = findHeader(headers, "Content-Type");
+    if (idx==std::size_t(-1))
+        return defCharset;
+
+    std::vector<std::string> parts;
+    utils::split(headers[idx].text, ';', std::back_inserter(parts));
+
+    if (parts.size()<2)
+        return defCharset;
+
+    //Header::trim(parts[1]);
+    parts[1] = utils::trim(parts[1]);
+    if (parts[1].empty())
+        return defCharset;
+
+    parts[1] = utils::tolower_copy(parts[1]);
+
+    std::vector<std::string> charsetParts;
+    utils::split(parts[1], '=', std::back_inserter(charsetParts));
+    // auto charsetParts = headers[idx].split(parts[1], '=');
+    // headers[idx].trim(charsetParts);
+    if (charsetParts.size()<2)
+        return defCharset;
+
+    if (charsetParts[0]!="charset")
+        return defCharset;
+
+    if (charsetParts[1].empty())
+        return defCharset;
+
+    return charsetParts[1];
+}
+
+//----------------------------------------------------------------------------
+
+
+
+//----------------------------------------------------------------------------
+struct Request
+{
+    std::vector<Header> headers;
+    std::string         body;
+
+    bool empty() const
+    {
+        return headers.empty();
+    }
+
+    void clear()
+    {
+        headers.clear();
+        body   .clear();
+    }
+
+}; // struct Request
+
+//----------------------------------------------------------------------------
+
+
+
+//----------------------------------------------------------------------------
+template<typename InputIt>
+inline
+InputIt readRequest(InputIt it, Request &r, bool bStrict=true)
+{
+    //Request r;
+
+    r.clear();
+    it = readHeaders(it, r.headers);
+
+    if (r.empty())
+        throw std::runtime_error("request headers empty");
+
+    std::size_t contentLength = getContentLength(r.headers);
+
+    if (bStrict)
+    {
+        auto contentType = getContentType(r.headers);
+        if (contentType!="application/vscode-jsonrpc")
+            throw std::runtime_error("invalid 'Content-Type': " + contentType);
+
+        auto charset = getContentTypeCharset(r.headers);
+        if (charset!="utf-8" && charset!="utf8")
+            throw std::runtime_error("invalid charset ib 'Content-Type' header: " + charset);
+    }
+
+    for(std::size_t i=0; i!=contentLength; ++i)
+    {
+        int ich = *it++;
+        if (ich<0)
+            throw std::runtime_error("unexpected end of file in STDIN");
+
+        char ch = (char)(unsigned char)(unsigned)ich;
+
+        r.body.append(1, ch);
+    }
+
+    return it;
+}
+
+
+    // Content-Length: 123 \r\n
+    // Content-Type: application/vscode-jsonrpc; charset=utf-8 \r\n
 
 
 

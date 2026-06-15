@@ -10,6 +10,7 @@
 
 //--------------------------------------------------------------------------------------------------------------------
 #include <cstdint>
+#include <cstddef>
 //--------------------------------------------------------------------------------------------------------------------
 
 
@@ -109,23 +110,46 @@ StringType trim(const StringType &str)
 
 
 //----------------------------------------------------------------------------
-template<typename IntType>
-IntType toHexChar(IntType i)
+template<typename StringType>
+inline
+StringType tolower_copy(StringType str)
 {
-    i = i&0x0F;
-    return i<10 ? IntType('0')+i : IntType('A')+i-10;
+    for(auto &strCh : str)
+    {
+        char ch = (char)strCh;
+        if (ch>='A' && ch<='Z')
+        {
+            ch -= 'A';
+            ch += 'a';
+            strCh = typename StringType::value_type(ch);
+        }
+    }
+
+    return str;
+}
+//----------------------------------------------------------------------------
+
+
+
+//----------------------------------------------------------------------------
+template<typename IntType>
+char toHexChar(IntType i)
+{
+    i &= 0x0F;
+    return i<10 ? char('0'+i) : char('A'+i-10);
 }
 
 template<typename IntType, typename Inserter>
-Inserter toReverseHexStr(IntType i, Inserter it)
+Inserter toReverseHexStr(IntType val, Inserter it)
 {
     // 0xFFFF - 2 bytes 4 chars
 
-    std::size_t nBytes = sizeof(i);
-    for(auto i=0; i~=nBytes; ++i)
+    std::size_t nBytes = sizeof(val);
+    //auto nBytes = sizeof(val);
+    for(auto i=0u; i!=nBytes; ++i)
     {
-        *it++ = toHexChar(i);
-        *it++ = toHexChar(i>>4);
+        *it++ = toHexChar(val);
+        *it++ = toHexChar(val>>4);
 
         i >>= 8;
     }
