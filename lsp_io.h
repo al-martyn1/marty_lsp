@@ -24,6 +24,10 @@
         #define _O_BINARY O_BINARY
     #endif
 
+    #ifndef _O_TEXT
+        #define _O_TEXT O_TEXT
+    #endif
+
 #elif defined(__linux__) || defined(__linux) || defined(__unux__) || defined(__unux)
 
     #include <termios.h>
@@ -31,6 +35,10 @@
     #include <stdio.h>
 
 #endif
+
+#include <string>
+#include <iostream>
+#include <iomanip>
 
 //----------------------------------------------------------------------------
 
@@ -47,8 +55,12 @@ namespace io {
 
 
 //----------------------------------------------------------------------------
-struct CharReader
+// Глобально меняет параметры потока STDIN
+// Не следует использовать поток STDIN до использования данного класса
+struct StdinCharReader
 {
+
+    
 
 #if defined(__linux__) || defined(__linux) || defined(__unux__) || defined(__unux)
 protected:
@@ -56,7 +68,7 @@ protected:
 public:
 #endif
 
-    CharReader()
+    StdinCharReader()
     {
 #if defined(_WIN32) || defined(WIN32)
     #if defined(_MSC_VER)
@@ -71,17 +83,17 @@ public:
 #endif
     }
 
-    ~CharReader()
+    ~StdinCharReader()
     {
 #if defined(__linux__) || defined(__linux) || defined(__unux__) || defined(__unux)
         tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // восстанавливаем настройки
 #endif
     }
 
-    CharReader(const CharReader &) = delete;
-    CharReader& operator=(const CharReader &) = delete;
-    CharReader(CharReader &&) = delete;
-    CharReader& operator=(CharReader &&) = delete;
+    StdinCharReader(const StdinCharReader &) = delete;
+    StdinCharReader& operator=(const StdinCharReader &) = delete;
+    StdinCharReader(StdinCharReader &&) = delete;
+    StdinCharReader& operator=(StdinCharReader &&) = delete;
 
     //static
     int getChar() const
@@ -92,9 +104,9 @@ public:
 
     struct InputIterator
     {
-        const CharReader *pReader;
+        const StdinCharReader *pReader;
 
-        InputIterator(const CharReader &r) : pReader(&r) {}
+        InputIterator(const StdinCharReader &r) : pReader(&r) {}
         InputIterator(const InputIterator &) = default;
         InputIterator(InputIterator &&) = default;
         InputIterator& operator=(const InputIterator &) = default;
@@ -124,7 +136,7 @@ public:
     }
 
 
-}; // struct CharReader
+}; // struct StdinCharReader
 
 //----------------------------------------------------------------------------
 
@@ -188,6 +200,35 @@ public:
 
 //----------------------------------------------------------------------------
 
+
+
+//----------------------------------------------------------------------------
+// Глобально меняет параметры потока STDOUT
+// Не следует использовать поток STDOUT до использования данной функции
+inline
+void setStdoutBinaryMode()
+{
+#if defined(_WIN32) || defined(WIN32)
+    #if defined(_MSC_VER)
+        _setmode(_fileno(stdout), _O_BINARY);
+    #else
+        setmode(fileno(stdout), _O_BINARY);
+    #endif
+#endif
+
+}
+
+//----------------------------------------------------------------------------
+
+
+
+//----------------------------------------------------------------------------
+inline
+void serverWriteMessage(const std::string &messageText)
+{
+    std::cout << "Content-Length: " << messageText.size() << "\r\n\r\n";
+    std::cout << messageText << std::flush; // После данных ничего записывать не нужно, никаких переводов строки и тп
+}
 
 
 //----------------------------------------------------------------------------
