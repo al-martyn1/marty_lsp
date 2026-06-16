@@ -76,7 +76,7 @@ IterType iterFrontTrimImpl(IterType b, IterType e)
     //     return false;
     // };
     //  
-    while(b!=e && !isSpace(*b)) ++b;
+    while(b!=e && isSpace(*b)) ++b;
 
     return b;
 }

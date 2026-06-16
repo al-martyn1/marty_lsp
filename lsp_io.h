@@ -92,9 +92,13 @@ public:
 
     struct InputIterator
     {
-        const CharReader &reader;
+        const CharReader *pReader;
 
-        InputIterator(const CharReader &r) : reader(r) {}
+        InputIterator(const CharReader &r) : pReader(&r) {}
+        InputIterator(const InputIterator &) = default;
+        InputIterator(InputIterator &&) = default;
+        InputIterator& operator=(const InputIterator &) = default;
+        InputIterator& operator=(InputIterator &&) = default;
 
         InputIterator operator++() // prefix
         {
@@ -108,7 +112,7 @@ public:
 
         int operator*()
         {
-            return reader.getChar();
+            return pReader->getChar();
         }
 
     }; // struct InputIterator

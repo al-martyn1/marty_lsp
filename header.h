@@ -272,7 +272,7 @@ std::size_t getContentLength(const std::vector<Header> &headers)
     }
     catch(const std::invalid_argument &)
     {
-        throw std::runtime_error("invalid value in 'Content-Length' header: " + headers[idx].text);
+        throw std::runtime_error("invalid value in 'Content-Length' header: '" + headers[idx].text + "'");
     }
     catch(const std::out_of_range &)
     {
