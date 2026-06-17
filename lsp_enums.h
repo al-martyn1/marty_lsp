@@ -87,7 +87,7 @@ void enum_from_json_as_string(const json &j, EnumType &e)
 
 //----------------------------------------------------------------------------
 template<typename EnumType>
-void enum_to_json_as_string_ex(json &j, EnumType e, std::map<std::string, std::string> &serializeExMap) // Для фиксов того, что генератор не смог нагенерить
+void enum_to_json_as_string_ex(json &j, EnumType e, const std::map<std::string, std::string> &serializeExMap) // Для фиксов того, что генератор не смог нагенерить
 {
     auto str = enum_serialize(e);
     str = utils::tolower_copy(str);
@@ -100,7 +100,7 @@ void enum_to_json_as_string_ex(json &j, EnumType e, std::map<std::string, std::s
 
 //----------------------------------------------------------------------------
 template<typename EnumType>
-void enum_from_json_as_string_ex(const json &j, EnumType &e, std::map<std::string, std::string> &deserializeExMap) // Для фиксов того, что генератор не смог нагенерить
+void enum_from_json_as_string_ex(const json &j, EnumType &e, const std::map<std::string, std::string> &deserializeExMap) // Для фиксов того, что генератор не смог нагенерить
 {
     auto str = j.get<std::string>();
     str = utils::tolower_copy(str);
@@ -129,17 +129,17 @@ void enum_from_json_as_string_ex(const json &j, EnumType &e, std::map<std::strin
                 enum_from_json_as_string(j, e);            \
             }
 
-#define MARTY_LSP_JSON_ENUM_AS_STRING_CONVERSIONS_EX(EnumType, serializeMap, deserializeMap) \
-            inline                                                 \
-            void to_json(json& j, EnumType e)                      \
-            {                                                      \
-                enum_to_json_as_string_ex(j, e, serializeMap);     \
-            }                                                      \
-                                                                   \
-            inline                                                 \
-            void from_json(const json& j, EnumType &e)             \
-            {                                                      \
-                enum_from_json_as_string_ex(j, e, deserializeMap); \
+#define MARTY_LSP_JSON_ENUM_AS_STRING_CONVERSIONS_EX(EnumType, serializeMap, deserializeMap)  \
+            inline                                                                            \
+            void to_json(json& j, EnumType e)                                                 \
+            {                                                                                 \
+                enum_to_json_as_string_ex(j, e, utils::retArg< std::map<std::string, std::string> > serializeMap);     \
+            }                                                                                 \
+                                                                                              \
+            inline                                                                            \
+            void from_json(const json& j, EnumType &e)                                        \
+            {                                                                                 \
+                enum_from_json_as_string_ex(j, e, utils::retArg< std::map<std::string, std::string> > deserializeMap); \
             }
 
 //----------------------------------------------------------------------------
@@ -157,8 +157,8 @@ MARTY_LSP_JSON_ENUM_AS_STRING_CONVERSIONS(FoldingRangeKind)
 MARTY_LSP_JSON_ENUM_AS_STRING_CONVERSIONS(FileOperationPatternKind)
 
 MARTY_LSP_JSON_ENUM_AS_STRING_CONVERSIONS_EX( PositionEncodingKind
-                                            {{"utf8", "utf-8"}, {"utf16", "utf-16"}, {"utf32", "utf-32"}} // serializeMap
-                                            {{"utf-8", "utf8"}, {"utf-16", "utf16"}, {"utf-32", "utf32"}} // deserializeMap
+                                            , ({{"utf8", "utf-8"}, {"utf16", "utf-16"}, {"utf32", "utf-32"}}) // serializeMap
+                                            , ({{"utf-8", "utf8"}, {"utf-16", "utf16"}, {"utf-32", "utf32"}}) // deserializeMap
                                             )
 // Для WatchKind сгенерены сериализация/десериализация в строки, но генерация там использовалась чисто ради флагов
 // А на самом деле этот enum сериализуется как обычное число
@@ -173,7 +173,7 @@ MARTY_LSP_JSON_ENUM_AS_UNDERLYING_TYPE_CONVERSIONS(SemanticTokenModifiers)
 
 
 //--------------------------------------------------------------------------------------------------------------------
-enum class ErrorCodes : int
+enum class ErrorCode : int
 {
     // Defined by JSON-RPC
     parseError              = -32700,
@@ -191,7 +191,7 @@ enum class ErrorCodes : int
     contentModified         = -32801
 };
 
-MARTY_LSP_JSON_ENUM_AS_UNDERLYING_TYPE_CONVERSIONS(ErrorCodes)
+MARTY_LSP_JSON_ENUM_AS_UNDERLYING_TYPE_CONVERSIONS(ErrorCode)
 
 //--------------------------------------------------------------------------------------------------------------------
 
@@ -454,12 +454,12 @@ MARTY_LSP_JSON_ENUM_AS_UNDERLYING_TYPE_CONVERSIONS(InsertTextMode)
 
 
 //----------------------------------------------------------------------------
-enum class InitializeErrorCodes : int
+enum class InitializeErrorCode : int
 {
     unknownProtocolVersion = 1
 };
 
-MARTY_LSP_JSON_ENUM_AS_UNDERLYING_TYPE_CONVERSIONS(InitializeErrorCodes)
+MARTY_LSP_JSON_ENUM_AS_UNDERLYING_TYPE_CONVERSIONS(InitializeErrorCode)
 
 //----------------------------------------------------------------------------
 

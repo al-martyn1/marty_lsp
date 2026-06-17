@@ -26,6 +26,18 @@ namespace utils {
 
 
 //----------------------------------------------------------------------------
+// Эта шляпа нужна, чтобы избавится от круглых скобок, которыми мы обрамляем инициализатор в {} при использовании макросов
+template<typename T>
+T retArg(T t)
+{
+    return t;
+}
+
+//----------------------------------------------------------------------------
+
+
+
+//----------------------------------------------------------------------------
 template<typename StringType, typename InsertIter>
 InsertIter split(const StringType &str, typename StringType::value_type delim, InsertIter it)
 {
