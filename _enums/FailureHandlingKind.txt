@@ -1,0 +1,5 @@
+unknown,invalid = -1  // !
+
+abort     = 1
+continue
+undo

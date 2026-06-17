@@ -1,0 +1,13 @@
+unknown,invalid = -1  // !
+
+declaration    = 0x00000001
+definition     = 0x00000002
+readonly       = 0x00000004
+static_        = 0x00000008
+deprecated     = 0x00000010
+abstract_      = 0x00000020
+async          = 0x00000040
+modification   = 0x00000080
+documentation  = 0x00000100
+defaultLibrary = 0x00000200
+

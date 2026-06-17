@@ -1,0 +1,6 @@
+unknown,invalid = -1  // !
+
+create  = 1
+change  = 2
+delete  = 4
+

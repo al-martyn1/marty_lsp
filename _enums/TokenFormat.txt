@@ -1,0 +1,3 @@
+unknown,invalid = -1  // !
+
+relative = 1

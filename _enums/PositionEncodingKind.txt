@@ -1,0 +1,5 @@
+unknown,invalid = -1  // !
+
+utf8   = 1
+utf16
+utf32

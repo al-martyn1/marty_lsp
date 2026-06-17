@@ -1,0 +1,5 @@
+unknown,invalid = -1  // !
+
+plainText       = 1
+markdown
+

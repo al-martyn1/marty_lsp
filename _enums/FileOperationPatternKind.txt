@@ -1,0 +1,4 @@
+unknown,invalid = -1  // !
+
+file      = 1
+folder    = 2
