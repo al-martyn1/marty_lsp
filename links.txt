@@ -1,0 +1,28 @@
+Универсальный LSP-клиент - Generic LSP Client for VSCode (llllvvuu-glspc) 
+                           Generic LSP Client (v2) (zsol)
+
+режим Extension Development Host - code --extensionDevelopmentPath=/путь/к/папке/вашего/расширения
+
+Tree-sitter - https://tree-sitter.github.io/tree-sitter/
+
+pytest-lsp
+
+VSCode настройки - Ctrl + ','/Cmd + ','
+
+Отладка LSP сервера в VSCode - https://chat.deepseek.com/share/dqudmwu8ysq20qjrkh
+                               https://chat.deepseek.com/share/pj7rs4zrcp8r668yda
+                               https://chat.deepseek.com/share/1c3559u46r4odtwp65
+
+Ctrl+Shift+P "Preferences: Open User Settings (JSON)"
+files.associations
+"files.associations": {
+    "*.nms": "plaintext"
+}
+
+Изначально такого ключа нет на чистом VSCode. Ctrl + ',', ищем "files.associations", делаем add
+*.lsptst lsptest
+Теперь можно найти через "Preferences..."
+
+node.js - https://github.com/coreybutler/nvm-windows/releases
+
+разбор непоняток с node.js - https://chat.deepseek.com/share/ntg65o2hl2jodtxohy
