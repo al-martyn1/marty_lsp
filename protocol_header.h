@@ -42,7 +42,7 @@ namespace lsp {
 
 
 //----------------------------------------------------------------------------
-struct Header
+struct ProtocolHeader
 {
     std::string    name;
     std::string    text;
@@ -56,7 +56,7 @@ struct Header
 
     template<typename InputIt>
     static
-    InputIt read(InputIt it, Header &hdr)
+    InputIt read(InputIt it, ProtocolHeader &hdr)
     {
 
         auto chToHexStr = [](auto ch) -> std::string
@@ -213,7 +213,7 @@ struct Header
     }
 
 
-}; // struct Header
+}; // struct ProtocolHeader
 
 //----------------------------------------------------------------------------
 
@@ -223,14 +223,14 @@ struct Header
 // У нас LSP-сервер - единственный клиент на STDIN, поэтому блокирующее чтение - норм
 template<typename InputIt>
 inline
-InputIt readHeaders(InputIt it, std::vector<Header> &headers)
+InputIt readHeaders(InputIt it, std::vector<ProtocolHeader> &headers)
 {
     headers.clear();
 
     while(true)
     {
-        Header hdr;
-        it = Header::read(it, hdr);
+        ProtocolHeader hdr;
+        it = ProtocolHeader::read(it, hdr);
         if (hdr.empty())
         {
             if (headers.empty())
@@ -244,7 +244,7 @@ InputIt readHeaders(InputIt it, std::vector<Header> &headers)
 
 //----------------------------------------------------------------------------
 inline
-std::size_t findHeader(const std::vector<Header> &headers, std::string hdrName)
+std::size_t findHeader(const std::vector<ProtocolHeader> &headers, std::string hdrName)
 {
     hdrName = utils::tolower_copy(hdrName);
 
@@ -259,7 +259,7 @@ std::size_t findHeader(const std::vector<Header> &headers, std::string hdrName)
 
 //----------------------------------------------------------------------------
 inline
-std::size_t getContentLength(const std::vector<Header> &headers)
+std::size_t getContentLength(const std::vector<ProtocolHeader> &headers)
 {
     std::size_t idx = findHeader(headers, "Content-Length");
     if (idx==std::size_t(-1))
@@ -283,7 +283,7 @@ std::size_t getContentLength(const std::vector<Header> &headers)
 
 //----------------------------------------------------------------------------
 inline
-std::string getContentType(const std::vector<Header> &headers, const std::string &defType="application/vscode-jsonrpc")
+std::string getContentType(const std::vector<ProtocolHeader> &headers, const std::string &defType="application/vscode-jsonrpc")
 {
     std::size_t idx = findHeader(headers, "Content-Type");
     if (idx==std::size_t(-1))
@@ -305,7 +305,7 @@ std::string getContentType(const std::vector<Header> &headers, const std::string
 
 //----------------------------------------------------------------------------
 inline
-std::string getContentTypeCharset(const std::vector<Header> &headers, const std::string &defCharset="utf-8")
+std::string getContentTypeCharset(const std::vector<ProtocolHeader> &headers, const std::string &defCharset="utf-8")
 {
     std::size_t idx = findHeader(headers, "Content-Type");
     if (idx==std::size_t(-1))
@@ -317,7 +317,7 @@ std::string getContentTypeCharset(const std::vector<Header> &headers, const std:
     if (parts.size()<2)
         return defCharset;
 
-    //Header::trim(parts[1]);
+    //ProtocolHeader::trim(parts[1]);
     parts[1] = utils::trim(parts[1]);
     if (parts[1].empty())
         return defCharset;
@@ -341,75 +341,6 @@ std::string getContentTypeCharset(const std::vector<Header> &headers, const std:
 }
 
 //----------------------------------------------------------------------------
-
-
-
-//----------------------------------------------------------------------------
-struct Request
-{
-    std::vector<Header> headers;
-    std::string         body;
-
-    bool empty() const
-    {
-        return headers.empty();
-    }
-
-    void clear()
-    {
-        headers.clear();
-        body   .clear();
-    }
-
-}; // struct Request
-
-//----------------------------------------------------------------------------
-
-
-
-//----------------------------------------------------------------------------
-template<typename InputIt>
-inline
-InputIt readRequest(InputIt it, Request &r, bool bStrict=true)
-{
-    //Request r;
-
-    r.clear();
-    it = readHeaders(it, r.headers);
-
-    if (r.empty())
-        throw std::runtime_error("request headers empty");
-
-    std::size_t contentLength = getContentLength(r.headers);
-
-    if (bStrict)
-    {
-        auto contentType = getContentType(r.headers);
-        if (contentType!="application/vscode-jsonrpc")
-            throw std::runtime_error("invalid 'Content-Type': " + contentType);
-
-        auto charset = getContentTypeCharset(r.headers);
-        if (charset!="utf-8" && charset!="utf8")
-            throw std::runtime_error("invalid charset ib 'Content-Type' header: " + charset);
-    }
-
-    for(std::size_t i=0; i!=contentLength; ++i)
-    {
-        int ich = *it++;
-        if (ich<0)
-            throw std::runtime_error("unexpected end of file in STDIN");
-
-        char ch = (char)(unsigned char)(unsigned)ich;
-
-        r.body.append(1, ch);
-    }
-
-    return it;
-}
-
-
-    // Content-Length: 123 \r\n
-    // Content-Type: application/vscode-jsonrpc; charset=utf-8 \r\n
 
 
 

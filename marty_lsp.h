@@ -13,7 +13,13 @@
 //
 #include "lsp_io.h"
 //
-#include "header.h"
+#include "protocol_header.h"
+//
+#include "protocol_request.h"
+//
+#include "lsp_types.h"
+//
+#include "lsp_utils.h"
 //
 // #include ""
 
